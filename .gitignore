@@ -2,12 +2,15 @@
 build/
 *.o
 *.exe
-Demo_App
+LibrarySystem
 imgui.ini
 compile_flags.txt
 
 # Logs
 *.log
+
+#.cache
+.cache/
 
 # Temporary/system files
 *.swp
