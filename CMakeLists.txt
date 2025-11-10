@@ -36,5 +36,14 @@ if(UNIX AND NOT APPLE)
     target_link_libraries(${PROJECT_NAME} ${X11_LIBRARIES} Threads::Threads dl m)
 endif()
 
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/fonts
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        ${CMAKE_SOURCE_DIR}/fonts
+        ${CMAKE_BINARY_DIR}/fonts
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/data
+    COMMENT "Copying fonts and data directories to build folder"
+)
+
 # Опції компіляції
 target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra)

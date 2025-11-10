@@ -46,19 +46,24 @@ bool Application::setupImGui() {
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO();
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
-    
+
     ImGui::StyleColorsDark();
-    
+
+    io.Fonts->AddFontFromFileTTF(
+        "fonts/Roboto-Regular.ttf",         // ваш шлях до TTF
+        18.0f,                              
+        nullptr,
+        io.Fonts->GetGlyphRangesCyrillic()  
+    );
+
     if (!ImGui_ImplGlfw_InitForOpenGL(window, true)) {
         std::cerr << "Не вдалося ініціалізувати ImGui для GLFW" << std::endl;
         return false;
     }
-    
     if (!ImGui_ImplOpenGL3_Init("#version 130")) {
         std::cerr << "Не вдалося ініціалізувати ImGui для OpenGL" << std::endl;
         return false;
     }
-    
     return true;
 }
 
