@@ -22,7 +22,8 @@ void LoanManager::render() {
             ImGui::EndTabItem();
         }
 
-        if (ImGui::BeginTabItem("Історія позичень")) {
+        if (ImGui::BeginTabItem("Активні позичення")) {
+            // Ensure the list of loans is current
             loadData();
             renderLoanList();
             ImGui::EndTabItem();
@@ -171,9 +172,9 @@ void LoanManager::renderReturnSection() {
     ImGui::Text("Повернення книги");
     ImGui::Separator();
 
-    std::vector<Loan> loanList = dbManager.getActiveLoans();
-    if (loanList.empty()) {
-        ImGui::Text("Пусто");
+    std::vector<Loan> activeLoans = dbManager.getActiveLoans();
+    if (activeLoans.empty()) {
+        ImGui::Text("Немає активних позичень");
         return;
     }
 
@@ -200,8 +201,8 @@ void LoanManager::renderReturnSection() {
         ImGui::TableSetupColumn("Дія");
         ImGui::TableHeadersRow();
 
-        for (size_t i = 0; i < loanList.size(); ++i) {
-            Loan& loan = loanList[i];
+        for (size_t i = 0; i < activeLoans.size(); ++i) {
+            Loan& loan = activeLoans[i];
             ImGui::TableNextRow();
 
             ImGui::TableSetColumnIndex(0); ImGui::Text("%s", getBookTitle(loan.getBookISBN()).c_str());
@@ -210,21 +211,28 @@ void LoanManager::renderReturnSection() {
             ImGui::TableSetColumnIndex(3); ImGui::Text("%s", toString(loan.getDueDate()).c_str());
 
             // status/fine
-            std::string statusStr = loan.isOverdue() ? "Просрочено" : "Вчасно";
+            std::string statusStr = loan.isOverdue() ? "Прострочено" : "Вчасно";
             double fine = loan.calculateFine();
             if (fine > 0.0) {
                 statusStr += " (штраф: " + std::to_string(static_cast<int>(fine)) + ")";
             }
             ImGui::TableSetColumnIndex(4); ImGui::Text("%s", statusStr.c_str());
 
+            // Action: render a clickable table cell (selectable text) instead of a button, looks more natural in a table
             ImGui::TableSetColumnIndex(5);
-            if (ImGui::Button(("Повернути##" + std::to_string(i)).c_str())) {
+
+            // Style the action like a link
+            ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.12f, 0.48f, 0.95f, 1.0f));
+            // Use Selectable without SpanAllColumns so only this cell is clickable
+            std::string actionLabel = "Повернути##" + std::to_string(i);
+            if (ImGui::Selectable(actionLabel.c_str(), false, 0)) {
+                // perform return flow (update loan in DB and refresh)
                 if (returnLoan(loan)) {
-                    // Reload active loans from DB so UI is consistent
                     loadData();
                     ImGui::OpenPopup("Повернено");
                 }
             }
+            ImGui::PopStyleColor();
         }
         ImGui::EndTable();
     }
@@ -250,16 +258,8 @@ bool LoanManager::returnLoan(Loan& loan) {
 
 // --- ВІДОБРАЖЕННЯ ВСІХ ПОЗИЧОК ---
 void LoanManager::renderLoanList() {
-    ImGui::Text("Усі позички:");
-    ImGui::BeginTable("loanTable", 5, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg);
-    ImGui::Text("ID"); ImGui::NextColumn();
-    ImGui::Text("Book ISBN"); ImGui::NextColumn();
-    ImGui::Text("Member ID"); ImGui::NextColumn();
-    ImGui::Text("Loan Date"); ImGui::NextColumn();
-    ImGui::Text("Return Date"); ImGui::NextColumn();
-    ImGui::Separator();
-
-    auto toString = [](std::chrono::system_clock::time_point tp) -> std::string {
+    // Make the Loans list look like other tables (headers, row-bg, scroll)
+    auto toString = [](const std::chrono::system_clock::time_point& tp) -> std::string {
         if (tp.time_since_epoch().count() == 0) return "-";
         std::time_t t = std::chrono::system_clock::to_time_t(tp);
         std::tm tm;
@@ -273,22 +273,50 @@ void LoanManager::renderLoanList() {
         return std::string(buf);
     };
 
-    for (size_t i = 0; i < loans.size(); ++i) {
-        const Loan& loan = loans[i];
-        ImGui::TableNextRow();
+    // Use a 7-column table: ID, Book, Member, Loan Date, Due Date, Return Date, Status
+    if (ImGui::BeginTable("LoansTable", 7, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY)) {
+        ImGui::TableSetupColumn("ID");
+        ImGui::TableSetupColumn("Книга");
+        ImGui::TableSetupColumn("Читач");
+        ImGui::TableSetupColumn("Дата позичення");
+        ImGui::TableSetupColumn("Термін повернення");
+        ImGui::TableSetupColumn("Дата повернення");
+        ImGui::TableSetupColumn("Статус");
+        ImGui::TableHeadersRow();
 
-        ImGui::TableSetColumnIndex(0);
-        ImGui::Text("%d", loan.getId());
-        ImGui::TableSetColumnIndex(1);
-        ImGui::Text("%s", loan.getBookISBN().c_str());
-        ImGui::TableSetColumnIndex(2);
-        ImGui::Text("%d", loan.getMemberId());
-        ImGui::TableSetColumnIndex(3);
-        ImGui::Text("%s", toString(loan.getLoanDate()).c_str());
-        ImGui::TableSetColumnIndex(4);
-        ImGui::Text("%s", toString(loan.getReturnDate()).c_str());
+        for (size_t i = 0; i < loans.size(); ++i) {
+            const auto& loan = loans[i];
+            ImGui::TableNextRow();
+
+            ImGui::TableSetColumnIndex(0);
+            ImGui::Text("%d", loan.getId());
+
+            ImGui::TableSetColumnIndex(1);
+            ImGui::Text("%s", getBookTitle(loan.getBookISBN()).c_str());
+
+            ImGui::TableSetColumnIndex(2);
+            ImGui::Text("%s", getMemberName(loan.getMemberId()).c_str());
+
+            ImGui::TableSetColumnIndex(3);
+            ImGui::Text("%s", toString(loan.getLoanDate()).c_str());
+
+            ImGui::TableSetColumnIndex(4);
+            ImGui::Text("%s", toString(loan.getDueDate()).c_str());
+
+            ImGui::TableSetColumnIndex(5);
+            ImGui::Text("%s", toString(loan.getReturnDate()).c_str());
+
+            ImGui::TableSetColumnIndex(6);
+            std::string status = loan.getIsReturned() ? "Повернено" : (loan.isOverdue() ? "Просрочено" : "В процесі");
+            double fine = loan.calculateFine();
+            if (fine > 0.0 && !loan.getIsReturned()) {
+                status += " (штраф: " + std::to_string(static_cast<int>(fine)) + ")";
+            }
+            ImGui::Text("%s", status.c_str());
+        }
+
+        ImGui::EndTable();
     }
-    ImGui::EndTable();
 }
 
 void LoanManager::loadData() {

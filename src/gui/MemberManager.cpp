@@ -1,4 +1,5 @@
 #include "MemberManager.h"
+#include "imgui.h"
 
 MemberManager::MemberManager(DatabaseManager& db) : dbManager(db) {
     loadMembers();
