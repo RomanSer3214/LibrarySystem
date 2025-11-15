@@ -143,7 +143,8 @@ void BookManager::renderEditBookPopup() {
     if (ImGui::BeginPopupModal("Редагувати книгу", &showEditBookPopup,
         ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove))
     {
-        ImGui::InputText("ISBN", isbnBuffer, sizeof(isbnBuffer));
+        // make ISBN read-only to avoid primary-key problems
+        ImGui::InputText("ISBN", isbnBuffer, sizeof(isbnBuffer), ImGuiInputTextFlags_ReadOnly);
         ImGui::InputText("Назва", titleBuffer, sizeof(titleBuffer));
         ImGui::InputText("Автор", authorBuffer, sizeof(authorBuffer));
         ImGui::InputText("Видавництво", genreBuffer, sizeof(genreBuffer));
@@ -173,8 +174,34 @@ void BookManager::addBook() {
 
 void BookManager::editBook() {
     if (selectedBookIndex >= 0 && selectedBookIndex < static_cast<int>(books.size())) {
-        auto& book = books[selectedBookIndex];
-        dbManager.updateBook(book);
+        auto oldBook = books[selectedBookIndex];
+        // Preserve original ISBN (primary key). Ignore changes to ISBN in edit dialog.
+        std::string origIsbn = oldBook.getISBN();
+
+        // Compute available copies after possible totalCopies change:
+        int newTotal = totalCopies;
+        int prevAvailable = oldBook.getAvailableCopies();
+        // If total decreased below previous available, clamp available copies
+        int newAvailable = prevAvailable;
+        if (newAvailable > newTotal) newAvailable = newTotal;
+        if (newAvailable < 0) newAvailable = 0;
+
+        Book updated(origIsbn,
+                     std::string(titleBuffer),
+                     std::string(authorBuffer),
+                     std::string(genreBuffer),
+                     publicationYear,
+                     newTotal,
+                     newAvailable,
+                     oldBook.getStatus());
+
+        // Persist to DB and update local cache
+        if (dbManager.updateBook(updated)) {
+            books[selectedBookIndex] = updated;
+        } else {
+            // If DB update failed, reload list to reflect DB state
+            loadBooks();
+        }
     }
 }
 

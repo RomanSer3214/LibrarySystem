@@ -150,7 +150,19 @@ void MemberManager::addMember() {
 
 void MemberManager::editMember() {
     if (selectedMemberIndex >= 0 && static_cast<size_t>(selectedMemberIndex) < members.size()) {
-        loadMembers();
+        const Member& old = members[selectedMemberIndex];
+        int id = old.getId();
+        Member::Type type = static_cast<Member::Type>(memberType);
+        // preserve maxBooksAllowed from existing record
+        int maxAllowed = old.getMaxBooksAllowed();
+        Member updated(id, std::string(nameBuffer), std::string(emailBuffer), std::string(phoneBuffer), type, maxAllowed);
+
+        if (dbManager.updateMember(updated)) {
+            loadMembers();
+        } else {
+            // reload to reflect DB state if update failed
+            loadMembers();
+        }
     }
 }
 
