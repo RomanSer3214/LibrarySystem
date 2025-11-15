@@ -1,7 +1,7 @@
 #include "Member.h"
 
-Member::Member(int id, const std::string& name, const std::string& email, Type memberType)
-    : id(id), name(name), email(email), type(memberType) {
+Member::Member(int id, const std::string& name, const std::string& email, const std::string& phone, Type memberType)
+    : id(id), name(name), email(email), phone(phone), type(memberType) {
     switch(type) {
         case Type::STUDENT: maxBooksAllowed = 5; break;
         case Type::FACULTY: maxBooksAllowed = 10; break;

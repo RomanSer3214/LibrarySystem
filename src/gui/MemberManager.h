@@ -7,27 +7,20 @@
 
 class MemberManager {
 private:
-    std::vector<Member> members;
     DatabaseManager& dbManager;
+    std::vector<Member> members;
     
     // Стан для UI
-    char searchBuffer[256] = "";
-    char nameBuffer[256] = "";
-    char emailBuffer[256] = "";
-    char phoneBuffer[256] = "";
+    char searchBuffer[200] = "";
+    char nameBuffer[100] = "";
+    char emailBuffer[100] = "";
+    char phoneBuffer[30] = "";
     int memberType = 0; // 0=Student, 1=Faculty, 2=External
     
     bool showAddMemberPopup = false;
     bool showEditMemberPopup = false;
     int selectedMemberIndex = -1;
 
-public:
-    MemberManager(DatabaseManager& db);
-    
-    void render();
-    void loadMembers();
-
-private:
     void renderMemberList();
     void renderAddMemberPopup();
     void renderEditMemberPopup();
@@ -37,4 +30,10 @@ private:
     void editMember();
     void deleteMember(int index);
     void searchMembers(const std::string& query);
+
+public:
+    MemberManager(DatabaseManager& db);
+    
+    void render();
+    void loadMembers();
 };

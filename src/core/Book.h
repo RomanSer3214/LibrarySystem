@@ -9,21 +9,20 @@ private:
     std::string isbn;
     std::string title;
     std::string author;
-    std::string publisher;
+    std::string genre;
     int publicationYear;
-    int totalCopies;
+    int totalCopies; 
     int availableCopies;
     Status status;
 
 public:
-    Book(const std::string& isbn, const std::string& title, 
-         const std::string& author, const std::string& publisher, 
-         int year, int copies);
+    Book(const std::string& isbn, const std::string& title, const std::string& author, const std::string& genre, int publicationYear, int copies);
+    Book(const std::string& isbn, const std::string& title, const std::string& author, const std::string& genre, int publicationYear, int totalCopies, int availableCopies, Status status);
     
     std::string getISBN() const { return isbn; }
     std::string getTitle() const { return title; }
     std::string getAuthor() const { return author; }
-    std::string getPublisher() const { return publisher; }
+    std::string getGenre() const { return genre; }
     int getPublicationYear() const { return publicationYear; }
     int getTotalCopies() const { return totalCopies; }
     int getAvailableCopies() const { return availableCopies; }

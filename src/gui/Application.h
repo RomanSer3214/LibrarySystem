@@ -1,8 +1,9 @@
 #pragma once
+#include <iostream>
 #include <GLFW/glfw3.h>
-#include "../../libs/imgui/imgui.h"
-#include "../../libs/imgui/backends/imgui_impl_glfw.h"
-#include "../libs/imgui/backends/imgui_impl_opengl3.h"
+#include "imgui.h"
+#include "imgui_impl_opengl3.h"
+#include "imgui_impl_glfw.h"
 #include "MainWindow.h"
 #include "../database/DatabaseManager.h"
 
@@ -13,6 +14,11 @@ private:
     DatabaseManager dbManager;
     ImVec4 clearColor;
 
+    bool setupWindow();
+    bool setupImGui();
+    void render();
+    void processInput();
+
 public:
     Application();
     ~Application();
@@ -20,10 +26,4 @@ public:
     bool initialize();
     void run();
     void shutdown();
-
-private:
-    bool setupWindow();
-    bool setupImGui();
-    void render();
-    void processInput();
 };

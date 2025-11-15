@@ -1,11 +1,11 @@
 #include "Book.h"
 
-Book::Book(const std::string& isbn, const std::string& title, 
-           const std::string& author, const std::string& publisher, 
-           int year, int copies)
-    : isbn(isbn), title(title), author(author), publisher(publisher),
-      publicationYear(year), totalCopies(copies), availableCopies(copies),
-      status(Status::AVAILABLE) {}
+Book::Book(const std::string& isbn, const std::string& title, const std::string& author, const std::string& genre, int year, int copies)
+    : isbn(isbn), title(title), author(author), genre(genre), publicationYear(year), totalCopies(copies), availableCopies(copies), status(Status::AVAILABLE) {}
+
+Book::Book(const std::string& isbn, const std::string& title, const std::string& author, const std::string& genre, int publicationYear, int totalCopies, int availableCopies, Status status)
+    : isbn(isbn), title(title), author(author), genre(genre), publicationYear(publicationYear), totalCopies(totalCopies), availableCopies(availableCopies), status(status) {}
+
 
 std::string Book::getStatusString() const {
     switch(status) {

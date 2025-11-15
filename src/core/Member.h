@@ -11,12 +11,11 @@ private:
     std::string name;
     std::string email;
     std::string phone;
-    std::string address;
     Type type;
     int maxBooksAllowed;
 
 public:
-    Member(int id, const std::string& name, const std::string& email, Type memberType);
+    Member(int id, const std::string& name, const std::string& email, const std::string& phone, Type memberType);
     
     int getId() const { return id; }
     std::string getName() const { return name; }
@@ -27,5 +26,4 @@ public:
     int getMaxBooksAllowed() const { return maxBooksAllowed; }
     
     void setPhone(const std::string& p) { phone = p; }
-    void setAddress(const std::string& addr) { address = addr; }
 };

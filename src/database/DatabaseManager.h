@@ -1,14 +1,16 @@
 #pragma once
 #include <string>
 #include <vector>
+#include <iostream>
 #include "../core/Book.h"
 #include "../core/Member.h"
 #include "../core/Loan.h"
+#include "sqlite3.h"
 
 class DatabaseManager {
 private:
     std::string dbPath;
-    void* db;
+    sqlite3* db;
 
 public:
     DatabaseManager(const std::string& path = "data/library.db");

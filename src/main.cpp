@@ -1,5 +1,4 @@
 #include "gui/Application.h"
-#include <iostream>
 
 int main() {
     try {

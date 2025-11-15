@@ -1,6 +1,4 @@
 #include "MemberManager.h"
-#include <algorithm>
-#include <cstring>
 
 MemberManager::MemberManager(DatabaseManager& db) : dbManager(db) {
     loadMembers();
@@ -28,7 +26,7 @@ void MemberManager::render() {
         strncpy(emailBuffer, member.getEmail().c_str(), sizeof(emailBuffer) - 1);
         strncpy(phoneBuffer, member.getPhone().c_str(), sizeof(phoneBuffer) - 1);
         
-        // Гарантуємо нуль-термінацію
+        // null-termination
         nameBuffer[sizeof(nameBuffer) - 1] = '\0';
         emailBuffer[sizeof(emailBuffer) - 1] = '\0';
         phoneBuffer[sizeof(phoneBuffer) - 1] = '\0';
@@ -55,62 +53,45 @@ void MemberManager::render() {
 }
 
 void MemberManager::renderSearchBar() {
-    ImGui::InputText("Пошук", searchBuffer, sizeof(searchBuffer));
-    if (ImGui::Button("Шукати")) {
-        searchMembers(searchBuffer);
-    }
+    ImGui::Text("Пошук:");
     ImGui::SameLine();
-    if (ImGui::Button("Очистити")) {
-        memset(searchBuffer, 0, sizeof(searchBuffer));
-        loadMembers();
+    ImGui::SetNextItemWidth(400);  
+    ImGui::InputText("##search", searchBuffer, sizeof(searchBuffer));
+    if (strlen(searchBuffer) > 0) {
+        searchMembers(searchBuffer);
     }
 }
 
 void MemberManager::renderMemberList() {
-    if (ImGui::BeginTable("MembersTable", 5, 
-        ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | 
-        ImGuiTableFlags_ScrollY | ImGuiTableFlags_Sortable)) {
-        
+    if (ImGui::BeginTable("MembersTable", 5, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY)) {
         ImGui::TableSetupColumn("ID");
         ImGui::TableSetupColumn("Ім'я");
         ImGui::TableSetupColumn("Email");
         ImGui::TableSetupColumn("Телефон");
         ImGui::TableSetupColumn("Тип");
         ImGui::TableHeadersRow();
-        
-        // ВИПРАВЛЕНО: використання size_t замість int
-        for (size_t i = 0; i < members.size(); i++) {
+
+        for (int i = 0; i < static_cast<int>(members.size()); i++) {
             const auto& member = members[i];
+
             ImGui::TableNextRow();
-            
-            if (static_cast<int>(i) == selectedMemberIndex) {
-                ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBg0, 
-                    ImGui::GetColorU32(ImGuiCol_Header));
-            }
-            
-            if (ImGui::IsItemClicked()) {
-                selectedMemberIndex = static_cast<int>(i);
-            }
-            
+
+            // Рядок клікабельний через Selectable
             ImGui::TableSetColumnIndex(0);
-            ImGui::Text("%d", member.getId());
-            
-            ImGui::TableSetColumnIndex(1);
-            ImGui::Text("%s", member.getName().c_str());
-            
-            ImGui::TableSetColumnIndex(2);
-            ImGui::Text("%s", member.getEmail().c_str());
-            
-            ImGui::TableSetColumnIndex(3);
-            ImGui::Text("%s", member.getPhone().c_str());
-            
-            ImGui::TableSetColumnIndex(4);
-            ImGui::Text("%s", member.getTypeString().c_str());
+            if (ImGui::Selectable(std::to_string(member.getId()).c_str(), selectedMemberIndex == i, ImGuiSelectableFlags_SpanAllColumns)) {
+                selectedMemberIndex = i;
+            }
+
+            ImGui::TableSetColumnIndex(1); ImGui::Text("%s", member.getName().c_str());
+            ImGui::TableSetColumnIndex(2); ImGui::Text("%s", member.getEmail().c_str());
+            ImGui::TableSetColumnIndex(3); ImGui::Text("%s", member.getPhone().c_str());
+            ImGui::TableSetColumnIndex(4); ImGui::Text("%s", member.getTypeString().c_str());
         }
-        
+
         ImGui::EndTable();
     }
 }
+
 
 void MemberManager::renderAddMemberPopup() {
     ImGui::OpenPopup("Додати читача");
@@ -160,8 +141,7 @@ void MemberManager::renderEditMemberPopup() {
 
 void MemberManager::addMember() {
     Member::Type type = static_cast<Member::Type>(memberType);
-    Member newMember(0, nameBuffer, emailBuffer, type);
-    newMember.setPhone(phoneBuffer);
+    Member newMember(0, nameBuffer, emailBuffer, phoneBuffer, type);
     
     if (dbManager.addMember(newMember)) {
         loadMembers(); // Перезавантажити з БД для отримання правильного ID
@@ -169,16 +149,12 @@ void MemberManager::addMember() {
 }
 
 void MemberManager::editMember() {
-    // ВИПРАВЛЕНО: використання size_t та видалення невикористовуваної змінної
     if (selectedMemberIndex >= 0 && static_cast<size_t>(selectedMemberIndex) < members.size()) {
-        // Оновлення читача
-        // У реальному проекті треба реалізувати updateMember в DatabaseManager
-        // auto& member = members[selectedMemberIndex]; // Видалено невикористовувану змінну
+        loadMembers();
     }
 }
 
 void MemberManager::deleteMember(int index) {
-    // ВИПРАВЛЕНО: використання size_t
     if (index >= 0 && static_cast<size_t>(index) < members.size()) {
         int id = members[index].getId();
         members.erase(members.begin() + index);

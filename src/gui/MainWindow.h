@@ -8,18 +8,15 @@
 
 class MainWindow {
 private:
+    DatabaseManager dbManager;
     std::unique_ptr<BookManager> bookManager;
     std::unique_ptr<MemberManager> memberManager;
     std::unique_ptr<LoanManager> loanManager;
-    DatabaseManager dbManager;
-    
-    bool showDemoWindow = false;
 
+    void renderMenuBar();
+    void renderMainContent();
+    
 public:
     MainWindow();
     void render();
-
-private:
-    void renderMenuBar();
-    void renderMainContent();
 };

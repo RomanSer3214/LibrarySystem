@@ -1,36 +1,28 @@
 #pragma once
 #include <vector>
 #include <string>
-#include "../../libs/imgui/imgui.h"
+#include <cstring>
+#include "imgui.h"
 #include "../core/Book.h"
 #include "../database/DatabaseManager.h"
 
 class BookManager {
 private:
-    std::vector<Book> books;
     DatabaseManager& dbManager;
+    std::vector<Book> books;
     
-    // Стан для UI
     char searchBuffer[256] = "";
     char isbnBuffer[64] = "";
     char titleBuffer[256] = "";
     char authorBuffer[256] = "";
-    char publisherBuffer[256] = "";
-    int publicationYear = 2024;
+    char genreBuffer[256] = "";
+    int publicationYear = 2025;
     int totalCopies = 1;
     
     bool showAddBookPopup = false;
     bool showEditBookPopup = false;
     int selectedBookIndex = -1;
 
-public:
-    BookManager(DatabaseManager& db);
-    
-    void render();
-    void loadBooks();
-    void saveBooks();
-
-private:
     void renderBookList();
     void renderAddBookPopup();
     void renderEditBookPopup();
@@ -40,4 +32,11 @@ private:
     void editBook();
     void deleteBook(int index);
     void searchBooks(const std::string& query);
+
+public:
+    BookManager(DatabaseManager& db);
+    
+    void render();
+    void loadBooks();
+    void saveBooks();
 };
