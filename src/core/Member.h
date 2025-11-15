@@ -15,8 +15,10 @@ private:
     int maxBooksAllowed;
 
 public:
+    // Existing constructor (keeps backward compatibility) and new overload with maxBooksAllowed
     Member(int id, const std::string& name, const std::string& email, const std::string& phone, Type memberType);
-    
+    Member(int id, const std::string& name, const std::string& email, const std::string& phone, Type memberType, int maxAllowed);
+
     int getId() const { return id; }
     std::string getName() const { return name; }
     std::string getEmail() const { return email; }

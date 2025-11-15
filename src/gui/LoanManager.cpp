@@ -208,11 +208,15 @@ void LoanManager::renderReturnSection() {
 }
 
 bool LoanManager::returnLoan(Loan& loan) {
-    Book* book = dbManager.findBook(loan.getBookISBN());
-    if (!book) return false;
+    // findBook now returns std::optional<Book>
+    auto optBook = dbManager.findBook(loan.getBookISBN());
+    if (!optBook.has_value()) return false;
 
-    if (!book->returnBook()) return false;
-    dbManager.updateBook(*book);
+    // work on a copy, then persist the update via dbManager.updateBook()
+    Book book = std::move(optBook.value());
+
+    if (!book.returnBook()) return false;
+    if (!dbManager.updateBook(book)) return false;
 
     loan.setIsReturned(true);
     loan.setReturnDate(std::chrono::system_clock::now());
@@ -279,4 +283,3 @@ std::string LoanManager::getMemberName(int memberId) const {
         if (member.getId() == memberId) return member.getName();
     return "Невідомий читач";
 }
-

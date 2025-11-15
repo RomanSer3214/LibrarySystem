@@ -1,3 +1,4 @@
+#include <iostream>
 #include "gui/Application.h"
 
 int main() {
