@@ -1,8 +1,6 @@
 #pragma once
 #include <vector>
 #include <string>
-#include <cstring>
-#include "imgui.h"
 #include "../core/Book.h"
 #include "../database/DatabaseManager.h"
 

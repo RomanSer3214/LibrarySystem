@@ -1,4 +1,6 @@
+#include <chrono>
 #include "LoanManager.h"
+#include "imgui.h"
 
 LoanManager::LoanManager(DatabaseManager& db) : dbManager(db) {
     loadData();
@@ -7,16 +9,21 @@ LoanManager::LoanManager(DatabaseManager& db) : dbManager(db) {
 void LoanManager::render() {
     if (ImGui::BeginTabBar("LoanTabs")) {
         if (ImGui::BeginTabItem("Позичити книгу")) {
+            // Refresh data when opening the borrow tab so we always show current books/members
+            loadData();
             renderBorrowSection();
             ImGui::EndTabItem();
         }
 
         if (ImGui::BeginTabItem("Повернути книгу")) {
+            // Refresh active loans/books before showing return UI
+            loadData();
             renderReturnSection();
             ImGui::EndTabItem();
         }
 
-        if (ImGui::BeginTabItem("Активні позичення")) {
+        if (ImGui::BeginTabItem("Історія позичень")) {
+            loadData();
             renderLoanList();
             ImGui::EndTabItem();
         }
@@ -33,20 +40,19 @@ void LoanManager::addLoan() {
 
     if (!book.isAvailable()) return;
 
-    // Створюємо об'єкт Loan
-    int newId = static_cast<int>(loans.size()) + 1; 
-    Loan newLoan(newId, book.getISBN(), member.getId(), loanDays);
+    // Create Loan with placeholder id (DB will assign id via AUTOINCREMENT)
+    Loan newLoan(0, book.getISBN(), member.getId(), loanDays);
 
-    loans.push_back(newLoan);
-
-    book.borrowBook();
-
-    selectedBookIndex = -1;
-    selectedMemberIndex = -1;
-
-    dbManager.addLoan(newLoan);
-
-    ImGui::OpenPopup("Позичка успішна");
+    // Let DatabaseManager handle transactional changes (it will decrement available_copies)
+    if (dbManager.addLoan(newLoan)) {
+        // Refresh local cache after DB change
+        loadData();
+        selectedBookIndex = -1;
+        selectedMemberIndex = -1;
+        ImGui::OpenPopup("Позичка успішна");
+    } else {
+        ImGui::OpenPopup("Помилка"); // existing "Помилка" popup handles messaging
+    }
 }
 
 
@@ -110,7 +116,7 @@ void LoanManager::renderBorrowSection() {
 
                 ImGui::TableSetColumnIndex(0);
                 if (ImGui::Selectable(book.getISBN().c_str(), selectedBookIndex == static_cast<int>(i), ImGuiSelectableFlags_SpanAllColumns)) {
-                    selectedBookIndex = i;
+                    selectedBookIndex = static_cast<int>(i);
                 }
 
                 ImGui::TableSetColumnIndex(1);
@@ -143,7 +149,7 @@ void LoanManager::renderBorrowSection() {
                 ImGui::TableNextRow();
                 ImGui::TableSetColumnIndex(0);
                 if (ImGui::Selectable(std::to_string(member.getId()).c_str(), selectedMemberIndex == static_cast<int>(i), ImGuiSelectableFlags_SpanAllColumns)) {
-                    selectedMemberIndex = i;
+                    selectedMemberIndex = static_cast<int>(i);
                 }
 
                 ImGui::TableSetColumnIndex(1);
@@ -165,34 +171,57 @@ void LoanManager::renderReturnSection() {
     ImGui::Text("Повернення книги");
     ImGui::Separator();
 
-    std::vector<Loan> activeLoans = dbManager.getActiveLoans();
-    if (activeLoans.empty()) {
-        ImGui::Text("Немає активних позичень");
+    std::vector<Loan> loanList = dbManager.getActiveLoans();
+    if (loanList.empty()) {
+        ImGui::Text("Пусто");
         return;
     }
 
-    if (ImGui::BeginTable("ActiveLoans", 5, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY)) {
+    auto toString = [](const std::chrono::system_clock::time_point& tp) -> std::string {
+        if (tp.time_since_epoch().count() == 0) return "-";
+        std::time_t t = std::chrono::system_clock::to_time_t(tp);
+        std::tm tm;
+    #ifdef _WIN32
+        localtime_s(&tm, &t);
+    #else
+        localtime_r(&t, &tm);
+    #endif
+        char buf[32];
+        std::strftime(buf, sizeof(buf), "%Y-%m-%d", &tm);
+        return std::string(buf);
+    };
+
+    if (ImGui::BeginTable("ActiveLoans", 6, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY)) {
         ImGui::TableSetupColumn("Книга");
         ImGui::TableSetupColumn("Читач");
         ImGui::TableSetupColumn("Дата позичення");
         ImGui::TableSetupColumn("Термін повернення");
+        ImGui::TableSetupColumn("Статус");
         ImGui::TableSetupColumn("Дія");
         ImGui::TableHeadersRow();
 
-        for (size_t i = 0; i < activeLoans.size(); ++i) {
-            Loan& loan = activeLoans[i];
+        for (size_t i = 0; i < loanList.size(); ++i) {
+            Loan& loan = loanList[i];
             ImGui::TableNextRow();
 
             ImGui::TableSetColumnIndex(0); ImGui::Text("%s", getBookTitle(loan.getBookISBN()).c_str());
             ImGui::TableSetColumnIndex(1); ImGui::Text("%s", getMemberName(loan.getMemberId()).c_str());
-            ImGui::TableSetColumnIndex(2); ImGui::Text("-");
-            ImGui::TableSetColumnIndex(3); ImGui::Text("-");
+            ImGui::TableSetColumnIndex(2); ImGui::Text("%s", toString(loan.getLoanDate()).c_str());
+            ImGui::TableSetColumnIndex(3); ImGui::Text("%s", toString(loan.getDueDate()).c_str());
 
-            ImGui::TableSetColumnIndex(4);
+            // status/fine
+            std::string statusStr = loan.isOverdue() ? "Просрочено" : "Вчасно";
+            double fine = loan.calculateFine();
+            if (fine > 0.0) {
+                statusStr += " (штраф: " + std::to_string(static_cast<int>(fine)) + ")";
+            }
+            ImGui::TableSetColumnIndex(4); ImGui::Text("%s", statusStr.c_str());
+
+            ImGui::TableSetColumnIndex(5);
             if (ImGui::Button(("Повернути##" + std::to_string(i)).c_str())) {
                 if (returnLoan(loan)) {
-                    activeLoans.erase(activeLoans.begin() + i);
-                    --i;
+                    // Reload active loans from DB so UI is consistent
+                    loadData();
                     ImGui::OpenPopup("Повернено");
                 }
             }
@@ -208,19 +237,15 @@ void LoanManager::renderReturnSection() {
 }
 
 bool LoanManager::returnLoan(Loan& loan) {
-    // findBook now returns std::optional<Book>
-    auto optBook = dbManager.findBook(loan.getBookISBN());
-    if (!optBook.has_value()) return false;
+    // Let Loan::returnBook compute returnDate and fineAmount (it updates its internals).
+    if (!loan.returnBook()) return false;
 
-    // work on a copy, then persist the update via dbManager.updateBook()
-    Book book = std::move(optBook.value());
+    // Let DatabaseManager handle the transactional DB update (it will also increment available_copies).
+    if (!dbManager.updateLoan(loan)) return false;
 
-    if (!book.returnBook()) return false;
-    if (!dbManager.updateBook(book)) return false;
-
-    loan.setIsReturned(true);
-    loan.setReturnDate(std::chrono::system_clock::now());
-    return dbManager.updateLoan(loan);
+    // Refresh UI data from DB to reflect the change.
+    loadData();
+    return true;
 }
 
 // --- ВІДОБРАЖЕННЯ ВСІХ ПОЗИЧОК ---

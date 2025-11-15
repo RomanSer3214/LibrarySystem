@@ -94,6 +94,9 @@ void MemberManager::renderMemberList() {
 
 
 void MemberManager::renderAddMemberPopup() {
+    static std::string addMemberError;
+    static bool showAddMemberError = false;
+
     ImGui::OpenPopup("Додати читача");
     if (ImGui::BeginPopupModal("Додати читача", &showAddMemberPopup)) {
         ImGui::InputText("Ім'я", nameBuffer, sizeof(nameBuffer));
@@ -104,12 +107,30 @@ void MemberManager::renderAddMemberPopup() {
         ImGui::Combo("Тип читача", &memberType, memberTypes, IM_ARRAYSIZE(memberTypes));
         
         if (ImGui::Button("Зберегти")) {
-            addMember();
-            showAddMemberPopup = false;
+            // validation: name required
+            std::string name = nameBuffer;
+            if (name.empty()) {
+                addMemberError = "Ім'я обов'язкове.";
+                showAddMemberError = true;
+                ImGui::OpenPopup("Помилка додавання читача");
+            } else {
+                addMember();
+                showAddMemberPopup = false;
+                showAddMemberError = false;
+            }
         }
         ImGui::SameLine();
         if (ImGui::Button("Скасувати")) {
             showAddMemberPopup = false;
+        }
+
+        if (ImGui::BeginPopupModal("Помилка додавання читача", &showAddMemberError, ImGuiWindowFlags_AlwaysAutoResize)) {
+            ImGui::Text("%s", addMemberError.c_str());
+            if (ImGui::Button("OK")) {
+                ImGui::CloseCurrentPopup();
+                showAddMemberError = false;
+            }
+            ImGui::EndPopup();
         }
         
         ImGui::EndPopup();
@@ -117,6 +138,9 @@ void MemberManager::renderAddMemberPopup() {
 }
 
 void MemberManager::renderEditMemberPopup() {
+    static std::string editMemberError;
+    static bool showEditMemberError = false;
+
     ImGui::OpenPopup("Редагувати читача");
     if (ImGui::BeginPopupModal("Редагувати читача", &showEditMemberPopup)) {
         ImGui::InputText("Ім'я", nameBuffer, sizeof(nameBuffer));
@@ -127,12 +151,29 @@ void MemberManager::renderEditMemberPopup() {
         ImGui::Combo("Тип читача", &memberType, memberTypes, IM_ARRAYSIZE(memberTypes));
         
         if (ImGui::Button("Зберегти")) {
-            editMember();
-            showEditMemberPopup = false;
+            std::string name = nameBuffer;
+            if (name.empty()) {
+                editMemberError = "Ім'я обов'язкове.";
+                showEditMemberError = true;
+                ImGui::OpenPopup("Помилка редагування читача");
+            } else {
+                editMember();
+                showEditMemberPopup = false;
+                showEditMemberError = false;
+            }
         }
         ImGui::SameLine();
         if (ImGui::Button("Скасувати")) {
             showEditMemberPopup = false;
+        }
+
+        if (ImGui::BeginPopupModal("Помилка редагування читача", &showEditMemberError, ImGuiWindowFlags_AlwaysAutoResize)) {
+            ImGui::Text("%s", editMemberError.c_str());
+            if (ImGui::Button("OK")) {
+                ImGui::CloseCurrentPopup();
+                showEditMemberError = false;
+            }
+            ImGui::EndPopup();
         }
         
         ImGui::EndPopup();

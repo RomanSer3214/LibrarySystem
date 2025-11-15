@@ -1,4 +1,6 @@
+#include <cstring>
 #include "BookManager.h"
+#include "imgui.h"
 
 BookManager::BookManager(DatabaseManager& db) : dbManager(db) {}
 
@@ -100,6 +102,9 @@ void BookManager::renderBookList() {
 }
 
 void BookManager::renderAddBookPopup() {
+    static std::string addBookError;
+    static bool showAddBookError = false;
+
     ImGui::SetNextWindowSize(ImVec2(400, 300), ImGuiCond_Appearing);
     ImGui::OpenPopup("Додати книгу");
     if (ImGui::BeginPopupModal("Додати книгу", &showAddBookPopup, ImGuiWindowFlags_NoResize)) {
@@ -111,12 +116,37 @@ void BookManager::renderAddBookPopup() {
         ImGui::InputInt("Кількість копій", &totalCopies);
         
         if (ImGui::Button("Зберегти")) {
-            addBook();
-            showAddBookPopup = false;
+            // validation
+            std::string isbn = isbnBuffer;
+            std::string title = titleBuffer;
+            std::string author = authorBuffer;
+
+            if (isbn.empty() || title.empty() || author.empty()) {
+                addBookError = "ISBN, Назва та Автор обов'язкові.";
+                showAddBookError = true;
+            } else if (totalCopies <= 0) {
+                addBookError = "Кількість копій повинна бути мінімум 1.";
+                showAddBookError = true;
+            } else {
+                addBook();
+                showAddBookPopup = false;
+                showAddBookError = false;
+            }
+
+            if (showAddBookError) ImGui::OpenPopup("Помилка додавання книги");
         }
         ImGui::SameLine();
         if (ImGui::Button("Скасувати")) {
             showAddBookPopup = false;
+        }
+
+        if (ImGui::BeginPopupModal("Помилка додавання книги", &showAddBookError, ImGuiWindowFlags_AlwaysAutoResize)) {
+            ImGui::Text("%s", addBookError.c_str());
+            if (ImGui::Button("OK")) {
+                ImGui::CloseCurrentPopup();
+                showAddBookError = false;
+            }
+            ImGui::EndPopup();
         }
         
         ImGui::EndPopup();
@@ -124,6 +154,9 @@ void BookManager::renderAddBookPopup() {
 }
 
 void BookManager::renderEditBookPopup() {
+    static std::string editBookError;
+    static bool showEditBookError = false;
+
     if (selectedBookIndex < 0) return; 
     Book& book = books[selectedBookIndex];
 
@@ -154,12 +187,35 @@ void BookManager::renderEditBookPopup() {
         ImGui::Separator();
 
         if (ImGui::Button("Зберегти")) {
-            editBook();
-            showEditBookPopup = false;
+            // validate edited values
+            std::string title = titleBuffer;
+            std::string author = authorBuffer;
+            if (title.empty() || author.empty()) {
+                editBookError = "Назва та Автор обов'язкові.";
+                showEditBookError = true;
+                ImGui::OpenPopup("Помилка редагування книги");
+            } else if (totalCopies <= 0) {
+                editBookError = "Кількість копій повинна бути мінімум 1.";
+                showEditBookError = true;
+                ImGui::OpenPopup("Помилка редагування книги");
+            } else {
+                editBook();
+                showEditBookPopup = false;
+                showEditBookError = false;
+            }
         }
         ImGui::SameLine();
         if (ImGui::Button("Скасувати")) {
             showEditBookPopup = false;
+        }
+
+        if (ImGui::BeginPopupModal("Помилка редагування книги", &showEditBookError, ImGuiWindowFlags_AlwaysAutoResize)) {
+            ImGui::Text("%s", editBookError.c_str());
+            if (ImGui::Button("OK")) {
+                ImGui::CloseCurrentPopup();
+                showEditBookError = false;
+            }
+            ImGui::EndPopup();
         }
 
         ImGui::EndPopup();
