@@ -31,7 +31,6 @@ public:
     bool getIsReturned() const { return isReturned; }
     double getFineAmount() const { return fineAmount; }
 
-    // --- Методи ---
     void setReturnDate(std::chrono::system_clock::time_point date) { returnDate = date; }
     void setIsReturned(bool returned) { isReturned = returned; }
 

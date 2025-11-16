@@ -1,6 +1,5 @@
 #pragma once
 #include <string>
-#include <vector>
 
 class Member {
 public:
@@ -15,7 +14,6 @@ private:
     int maxBooksAllowed;
 
 public:
-    // Existing constructor (keeps backward compatibility) and new overload with maxBooksAllowed
     Member(int id, const std::string& name, const std::string& email, const std::string& phone, Type memberType);
     Member(int id, const std::string& name, const std::string& email, const std::string& phone, Type memberType, int maxAllowed);
 

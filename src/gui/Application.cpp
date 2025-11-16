@@ -103,7 +103,7 @@ bool Application::setupImGui() {
     ImGuiTheme();
 
     io.Fonts->AddFontFromFileTTF(
-        "fonts/Roboto-Regular.ttf",         // ваш шлях до TTF
+        "fonts/Roboto-Regular.ttf",         // TTF
         18.0f,                              
         nullptr,
         io.Fonts->GetGlyphRangesCyrillic()  

@@ -41,7 +41,6 @@ bool DatabaseManager::validateLogin(const std::string& username, const std::stri
 
     std::string inputHash = sha256(password);
 
-    // видаляємо можливі зайві символи з storedHash
     storedHash.erase(std::remove_if(storedHash.begin(), storedHash.end(), ::isspace), storedHash.end());
 
     if (inputHash == storedHash) {
@@ -134,12 +133,10 @@ bool DatabaseManager::createTables() {
         );
     )";
 
-    // Створюємо таблиці
     if (!(executeSQL(books_sql) && executeSQL(members_sql) && executeSQL(loans_sql) && executeSQL(users_sql))) {
         return false;
     }
 
-    // Вставляємо або оновлюємо admin / admin
     const char* insertAdmin = R"(
         INSERT INTO users (username, password_hash)
         VALUES ('admin', '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918')
@@ -148,7 +145,6 @@ bool DatabaseManager::createTables() {
 
     return executeSQL(insertAdmin);
 }
-// ---------------- Books ----------------
 
 bool DatabaseManager::addBook(const Book& book) {
     const char* sql =
@@ -266,7 +262,6 @@ std::optional<Book> DatabaseManager::findBook(const std::string& isbn) {
     return result;
 }
 
-// ---------------- Members ----------------
 
 bool DatabaseManager::addMember(const Member& member) {
     const char* sql = "INSERT INTO members (name, email, phone, member_type, max_books_allowed) VALUES (?, ?, ?, ?, ?)";
@@ -368,7 +363,6 @@ std::optional<Member> DatabaseManager::findMember(int id) {
     return result;
 }
 
-// ---------------- Loans ----------------
 
 bool DatabaseManager::addLoan(const Loan& loan) {
     // Use transaction: insert loan and decrement book.available_copies

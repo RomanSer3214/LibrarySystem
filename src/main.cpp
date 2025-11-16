@@ -1,6 +1,5 @@
 #include <iostream>
 #include "gui/Application.h"
-#include "core/hash.h"
 
 int main() {
     try {

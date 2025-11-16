@@ -4,12 +4,10 @@ project(LibrarySystem)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-# Використовуємо системний GLFW
 find_package(glfw3 REQUIRED)
 find_package(OpenGL REQUIRED)
 find_package(OpenSSL REQUIRED)
 
-# Всі файли проекту
 file(GLOB_RECURSE SOURCES
     src/*.cpp
     libs/imgui/*.cpp
@@ -19,7 +17,6 @@ file(GLOB_RECURSE SOURCES
 
 add_executable(${PROJECT_NAME} ${SOURCES})
 
-# Інклюди
 target_include_directories(${PROJECT_NAME} PRIVATE
     src
     libs/imgui
@@ -27,14 +24,12 @@ target_include_directories(${PROJECT_NAME} PRIVATE
     libs/sqlite3
 )
 
-# Лінковка
 target_link_libraries(${PROJECT_NAME}
     glfw
     OpenGL::GL
     OpenSSL::Crypto       
 )
 
-# Linux лінковка
 if(UNIX AND NOT APPLE)
     find_package(X11 REQUIRED)
     find_package(Threads REQUIRED)
@@ -50,5 +45,4 @@ add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
     COMMENT "Copying fonts and data directories to build folder"
 )
 
-# Опції компіляції
 target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra)

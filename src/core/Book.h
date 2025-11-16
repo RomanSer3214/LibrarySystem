@@ -22,7 +22,6 @@ public:
     Book(const std::string& isbn, const std::string& title, const std::string& author,
          const std::string& genre, int publicationYear, int totalCopies, int availableCopies, Status status);
 
-    // Getters
     std::string getISBN() const { return isbn; }
     std::string getTitle() const { return title; }
     std::string getAuthor() const { return author; }
@@ -32,12 +31,10 @@ public:
     int getAvailableCopies() const { return availableCopies; }
     Status getStatus() const { return status; }
 
-    // Setters (small, safe)
     void setAvailableCopies(int copies) { availableCopies = copies < 0 ? 0 : copies; if (availableCopies > totalCopies) availableCopies = totalCopies; }
     void setTotalCopies(int copies) { totalCopies = copies < 0 ? 0 : copies; if (availableCopies > totalCopies) availableCopies = totalCopies; }
     void setStatus(Status s) { status = s; }
 
-    // Helpers
     std::string getStatusString() const;
     bool borrowBook();
     bool returnBook();   

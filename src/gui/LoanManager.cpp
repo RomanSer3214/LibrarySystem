@@ -57,7 +57,6 @@ void LoanManager::addLoan() {
 }
 
 
-// --- ПОЗИЧАННЯ КНИГИ ---
 void LoanManager::renderBorrowSection() {
     ImGui::Text("Пошук книги:");
     ImGui::SameLine();
@@ -135,7 +134,7 @@ void LoanManager::renderBorrowSection() {
         ImGui::EndChild();
     }
 
-    ImGui::NextColumn(); // права колонка — читачі
+    ImGui::NextColumn(); 
 
     if (ImGui::BeginChild("MembersTableChild", ImVec2(0, 400), true)) {
         if (ImGui::BeginTable("MembersTable", 3, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY)) {
@@ -165,9 +164,9 @@ void LoanManager::renderBorrowSection() {
         ImGui::EndChild();
     }
 
-    ImGui::Columns(1); // скидаємо колонки назад
+    ImGui::Columns(1); 
 }
-// --- ПОВЕРНЕННЯ КНИГИ ---
+
 void LoanManager::renderReturnSection() {
     ImGui::Text("Повернення книги");
     ImGui::Separator();
