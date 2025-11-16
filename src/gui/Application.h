@@ -1,5 +1,4 @@
 #pragma once
-#include <iostream>
 #include <GLFW/glfw3.h>
 #include "imgui.h"
 #include "imgui_impl_opengl3.h"
@@ -9,9 +8,9 @@
 
 class Application {
 private:
+    DatabaseManager dbManager;
     GLFWwindow* window;
     MainWindow mainWindow;
-    DatabaseManager dbManager;
     ImVec4 clearColor;
 
     bool setupWindow();

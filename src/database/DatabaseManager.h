@@ -20,7 +20,9 @@ public:
     ~DatabaseManager();
     
     bool initialize();
-    
+   
+    bool validateLogin(const std::string& username, const std::string& password, int& outUserId);
+
     bool addBook(const Book& book);
     bool updateBook(const Book& book);
     bool deleteBook(const std::string& isbn);

@@ -2,8 +2,8 @@
 #include <iostream>
 #include <chrono>
 #include <optional>
+#include "../core/hash.h"
 
-// Helper: convert time_point <-> seconds since epoch
 static inline std::int64_t timepoint_to_seconds(const std::chrono::system_clock::time_point& tp) {
     return std::chrono::duration_cast<std::chrono::seconds>(tp.time_since_epoch()).count();
 }
@@ -13,6 +13,45 @@ static inline std::chrono::system_clock::time_point seconds_to_timepoint(std::in
 
 DatabaseManager::DatabaseManager(const std::string& path) : dbPath(path), db(nullptr) {
     initialize();
+}
+
+bool DatabaseManager::validateLogin(const std::string& username, const std::string& password, int& outUserId) {
+    sqlite3_stmt* stmt = nullptr;
+    std::string query = "SELECT id, password_hash FROM users WHERE username = ? LIMIT 1";
+
+    if (sqlite3_prepare_v2(db, query.c_str(), -1, &stmt, nullptr) != SQLITE_OK) {
+        std::cerr << "SQLite prepare failed (validateLogin): " << sqlite3_errmsg(db) << std::endl;
+        return false;
+    }
+
+    sqlite3_bind_text(stmt, 1, username.c_str(), -1, SQLITE_TRANSIENT);
+
+    int rc = sqlite3_step(stmt);
+    if (rc != SQLITE_ROW) {
+        std::cerr << "User not found or step failed: rc=" << rc << std::endl;
+        sqlite3_finalize(stmt);
+        return false;
+    }
+
+    int userId = sqlite3_column_int(stmt, 0);
+    const unsigned char* storedHashC = sqlite3_column_text(stmt, 1);
+    std::string storedHash = storedHashC ? reinterpret_cast<const char*>(storedHashC) : "";
+
+    sqlite3_finalize(stmt);
+
+    std::string inputHash = sha256(password);
+
+    // видаляємо можливі зайві символи з storedHash
+    storedHash.erase(std::remove_if(storedHash.begin(), storedHash.end(), ::isspace), storedHash.end());
+
+    if (inputHash == storedHash) {
+        outUserId = userId;
+        std::cout << "Login successful! User ID: " << userId << "\n";
+        return true;
+    }
+
+    std::cout << "Login failed inside validateLogin\n";
+    return false;
 }
 
 DatabaseManager::~DatabaseManager() {
@@ -48,7 +87,7 @@ bool DatabaseManager::executeSQL(const std::string& sql) {
 }
 
 bool DatabaseManager::createTables() {
-    const char* sql = R"(
+    const char* books_sql = R"(
         CREATE TABLE IF NOT EXISTS books (
             isbn TEXT PRIMARY KEY,
             title TEXT NOT NULL,
@@ -59,7 +98,9 @@ bool DatabaseManager::createTables() {
             available_copies INTEGER,
             status INTEGER
         );
+    )";
 
+    const char* members_sql = R"(
         CREATE TABLE IF NOT EXISTS members (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT NOT NULL,
@@ -68,7 +109,9 @@ bool DatabaseManager::createTables() {
             member_type INTEGER,
             max_books_allowed INTEGER
         );
+    )";
 
+    const char* loans_sql = R"(
         CREATE TABLE IF NOT EXISTS loans (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             book_isbn TEXT NOT NULL,
@@ -82,9 +125,29 @@ bool DatabaseManager::createTables() {
             FOREIGN KEY (member_id) REFERENCES members (id) ON DELETE CASCADE
         );
     )";
-    return executeSQL(sql);
-}
 
+    const char* users_sql = R"(
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT UNIQUE NOT NULL,
+            password_hash TEXT NOT NULL
+        );
+    )";
+
+    // Створюємо таблиці
+    if (!(executeSQL(books_sql) && executeSQL(members_sql) && executeSQL(loans_sql) && executeSQL(users_sql))) {
+        return false;
+    }
+
+    // Вставляємо або оновлюємо admin / admin
+    const char* insertAdmin = R"(
+        INSERT INTO users (username, password_hash)
+        VALUES ('admin', '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918')
+        ON CONFLICT(username) DO UPDATE SET password_hash=excluded.password_hash;
+    )";
+
+    return executeSQL(insertAdmin);
+}
 // ---------------- Books ----------------
 
 bool DatabaseManager::addBook(const Book& book) {

@@ -7,6 +7,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 # Використовуємо системний GLFW
 find_package(glfw3 REQUIRED)
 find_package(OpenGL REQUIRED)
+find_package(OpenSSL REQUIRED)
 
 # Всі файли проекту
 file(GLOB_RECURSE SOURCES
@@ -27,7 +28,11 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 )
 
 # Лінковка
-target_link_libraries(${PROJECT_NAME} glfw OpenGL::GL)
+target_link_libraries(${PROJECT_NAME}
+    glfw
+    OpenGL::GL
+    OpenSSL::Crypto       
+)
 
 # Linux лінковка
 if(UNIX AND NOT APPLE)
