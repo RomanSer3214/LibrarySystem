@@ -11,7 +11,7 @@ private:
     std::string email;
     std::string phone;
     Type type;
-    int maxBooksAllowed;
+    int maxBooksAllowed = 0;
 
 public:
     Member(int id, const std::string& name, const std::string& email, const std::string& phone, Type memberType);

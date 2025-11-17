@@ -81,7 +81,7 @@ bool Application::setupWindow() {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
     
-    window = glfwCreateWindow(1280, 720, "Бібліотечна система", nullptr, nullptr);
+    window = glfwCreateWindow(1280, 720, "Library Manager", nullptr, nullptr);
     if (!window) {
         std::cerr << "Не вдалося створити вікно GLFW" << std::endl;
         glfwTerminate();

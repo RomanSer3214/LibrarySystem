@@ -234,14 +234,14 @@ void BookManager::editBook() {
         // Preserve original ISBN (primary key). Ignore changes to ISBN in edit dialog.
         std::string origIsbn = oldBook.getISBN();
 
-        // Compute available copies after possible totalCopies change:
         int newTotal = totalCopies;
-        int prevAvailable = oldBook.getAvailableCopies();
-        // If total decreased below previous available, clamp available copies
-        int newAvailable = prevAvailable;
-        if (newAvailable > newTotal) newAvailable = newTotal;
-        if (newAvailable < 0) newAvailable = 0;
+      int prevAvailable = oldBook.getAvailableCopies();
 
+        int diff = newTotal - oldBook.getTotalCopies();
+        int newAvailable = prevAvailable + diff;
+
+        if (newAvailable > newTotal) newAvailable = newTotal;
+        if (newAvailable < 0) newAvailable = 0; 
         Book updated(origIsbn,
                      std::string(titleBuffer),
                      std::string(authorBuffer),

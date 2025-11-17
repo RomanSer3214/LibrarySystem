@@ -14,7 +14,7 @@ void MainWindow::renderMainContent() {
     ImGui::SetNextWindowPos(ImVec2(0, 0));
     ImGui::SetNextWindowSize(ImGui::GetIO().DisplaySize);
                                      
-    ImGui::Begin("Бібліотечна система", nullptr, 
+    ImGui::Begin("Library Manager", nullptr, 
         ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | 
         ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse);
     
@@ -35,7 +35,7 @@ void MainWindow::renderMainContent() {
         }
         
         if (ImGui::BeginTabItem("Про систему")) {
-            ImGui::Text("Бібліотечна система v1.0");
+            ImGui::Text("Library Manager v0.8");
             ImGui::Text("Розроблено для курсової роботи");
             ImGui::Text("Використані технології: C++, Dear ImGui, GLFW, SQLite3");
             ImGui::EndTabItem();

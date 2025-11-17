@@ -25,6 +25,7 @@ private:
     std::string getBookTitle(const std::string& isbn) const;
     std::string getMemberName(int memberId) const;
     void addLoan();
+    bool maxBooksAllowedExceeded(const Member& member) const;
     bool borrowBook(int bookIndex, int memberIndex);
     bool returnLoan(Loan& loan);
 

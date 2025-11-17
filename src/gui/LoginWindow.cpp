@@ -3,17 +3,15 @@
 
 void renderLoginWindow(DatabaseManager& db, UserSession& session)
 {
-    // Буфери робимо static, щоб не затиралися кожен кадр
     static char usernameBuf[64] = "";
     static char passwordBuf[64] = "";
     static std::string errorMessage = "";
 
     ImVec2 displaySize = ImGui::GetIO().DisplaySize;
 
-    // Тінь на фоні (сірування)
     ImGui::GetBackgroundDrawList()->AddRectFilled(
         ImVec2(0,0), displaySize,
-        IM_COL32(0,0,0,120) // чорний з прозорістю 120/255
+        IM_COL32(0,0,0,120) 
     );
     
 
@@ -26,7 +24,7 @@ void renderLoginWindow(DatabaseManager& db, UserSession& session)
         ImGuiWindowFlags_NoCollapse |
         ImGuiWindowFlags_NoTitleBar);
 
-    ImGui::Text("Вхід в систему бібліотеки");
+    ImGui::Text("Вхід в систему");
     ImGui::Spacing();
 
     ImGui::InputText("Логін", usernameBuf, sizeof(usernameBuf));

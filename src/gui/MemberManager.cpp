@@ -66,7 +66,7 @@ void MemberManager::renderSearchBar() {
 void MemberManager::renderMemberList() {
     if (ImGui::BeginTable("MembersTable", 5, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY)) {
         ImGui::TableSetupColumn("ID");
-        ImGui::TableSetupColumn("Ім'я");
+        ImGui::TableSetupColumn("ПІБ");
         ImGui::TableSetupColumn("Email");
         ImGui::TableSetupColumn("Телефон");
         ImGui::TableSetupColumn("Тип");
@@ -100,7 +100,7 @@ void MemberManager::renderAddMemberPopup() {
 
     ImGui::OpenPopup("Додати читача");
     if (ImGui::BeginPopupModal("Додати читача", &showAddMemberPopup)) {
-        ImGui::InputText("Ім'я", nameBuffer, sizeof(nameBuffer));
+        ImGui::InputText("ПІБ", nameBuffer, sizeof(nameBuffer));
         ImGui::InputText("Email", emailBuffer, sizeof(emailBuffer));
         ImGui::InputText("Телефон", phoneBuffer, sizeof(phoneBuffer));
         
@@ -110,8 +110,9 @@ void MemberManager::renderAddMemberPopup() {
         if (ImGui::Button("Зберегти")) {
             // validation: name required
             std::string name = nameBuffer;
+            std::string phoneNumber = phoneBuffer;
             if (name.empty()) {
-                addMemberError = "Ім'я обов'язкове.";
+                addMemberError = "ПІБ і телефон обов'язкові.";
                 showAddMemberError = true;
                 ImGui::OpenPopup("Помилка додавання читача");
             } else {
@@ -144,7 +145,7 @@ void MemberManager::renderEditMemberPopup() {
 
     ImGui::OpenPopup("Редагувати читача");
     if (ImGui::BeginPopupModal("Редагувати читача", &showEditMemberPopup)) {
-        ImGui::InputText("Ім'я", nameBuffer, sizeof(nameBuffer));
+        ImGui::InputText("ПІБ", nameBuffer, sizeof(nameBuffer));
         ImGui::InputText("Email", emailBuffer, sizeof(emailBuffer));
         ImGui::InputText("Телефон", phoneBuffer, sizeof(phoneBuffer));
         
@@ -153,8 +154,9 @@ void MemberManager::renderEditMemberPopup() {
         
         if (ImGui::Button("Зберегти")) {
             std::string name = nameBuffer;
-            if (name.empty()) {
-                editMemberError = "Ім'я обов'язкове.";
+            std::string phoneNumber = phoneBuffer;
+            if (name.empty() || phoneNumber.empty()) {
+                editMemberError = "ПІБ і телефон обов'язкові.";
                 showEditMemberError = true;
                 ImGui::OpenPopup("Помилка редагування читача");
             } else {
