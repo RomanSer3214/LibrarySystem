@@ -1,6 +1,7 @@
 #include <chrono>
 #include "LoanManager.h"
 #include "imgui.h"
+#include <algorithm>
 
 LoanManager::LoanManager(DatabaseManager& db) : dbManager(db) {
     loadData();
@@ -17,7 +18,7 @@ void LoanManager::render() {
 
         if (ImGui::BeginTabItem("Повернути книгу")) {
             // Refresh active loans/books before showing return UI
-            loadData();
+            loadData(); 
             renderReturnSection();
             ImGui::EndTabItem();
         }
